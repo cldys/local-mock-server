@@ -24,6 +24,8 @@ npm install
 npm run dev
 ```
 
+`dev` 使用稳定的普通 Node 启动，不开启文件监听，避免 macOS 上出现 `EMFILE: too many open files`。修改 mock 配置后按 `Ctrl + C` 停止服务，再重新执行 `npm run dev` 即可。
+
 默认启动地址：
 
 ```text
@@ -49,6 +51,32 @@ MOCK_HOST=0.0.0.0 npm run dev
 ```
 
 注意：`0.0.0.0` 只适合作为服务监听地址，不建议直接在浏览器中访问。浏览器里请使用 `localhost`、`127.0.0.1`，或者你的本机局域网 IP。
+
+## 端口占用处理
+
+如果启动时报：
+
+```text
+Error: listen EADDRINUSE: address already in use 127.0.0.1:3001
+```
+
+说明 `3001` 端口已经有服务在运行。可以先查看占用进程：
+
+```bash
+lsof -nP -iTCP:3001 -sTCP:LISTEN
+```
+
+确认是旧的 mock 服务后停止它：
+
+```bash
+kill <PID>
+```
+
+或者直接换一个端口启动：
+
+```bash
+MOCK_PORT=3100 npm run dev
+```
 
 ## 项目结构
 

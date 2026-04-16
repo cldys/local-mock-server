@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
+    "dev": "node server.js",
     "check": "node --check server.js && node --check src/app.js && node --check src/router/registerRoutes.js && node --check src/utils/validate.js"
   },
   "keywords": [
