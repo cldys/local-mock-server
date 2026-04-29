@@ -2,15 +2,16 @@
 
 一个独立运行的 Node + Express Mock 服务，用于前端本地开发阶段模拟后端接口。
 
+这个项目现在采用约定式 `.mock.js` 文件：目录决定请求方法，文件名决定接口路径，返回值直接写在 mock 文件里。项目不再使用 `.json` 文件保存响应数据。
+
 ## 特性
 
 - 支持 `GET` / `POST` / `PUT` / `DELETE` / `PATCH`
-- 根据请求方法和请求路径匹配接口
-- 接口配置按模块拆分
-- 响应数据放在独立 JSON 文件中
-- 成功时返回固定 demo 数据
-- 只校验必填参数是否缺失
-- 缺参、未匹配接口使用统一错误格式
+- 新增接口只需要新增一个 `.mock.js` 文件
+- `.mock.js` 可以写注释、默认返回、多场景返回和简单动态逻辑
+- 默认不校验参数，需要时可在 mock 文件里声明 `required`
+- 成功返回自动使用统一格式，已包含 `code/message/data` 的响应会原样返回
+- 缺参、未知场景、未匹配接口使用统一错误格式
 
 ## 安装
 
@@ -24,18 +25,12 @@ npm install
 npm run dev
 ```
 
-`dev` 使用稳定的普通 Node 启动，不开启文件监听，避免 macOS 上出现 `EMFILE: too many open files`。修改 mock 配置后按 `Ctrl + C` 停止服务，再重新执行 `npm run dev` 即可。
+`dev` 使用普通 Node 启动，不开启文件监听。修改 mock 文件后按 `Ctrl + C` 停止服务，再重新执行 `npm run dev` 即可。
 
 默认启动地址：
 
 ```text
-http://localhost:3001
-```
-
-根路径也会返回服务状态：
-
-```bash
-curl http://localhost:3001/
+http://localhost:3039
 ```
 
 也可以指定端口：
@@ -50,33 +45,7 @@ MOCK_PORT=3100 npm run dev
 MOCK_HOST=0.0.0.0 npm run dev
 ```
 
-注意：`0.0.0.0` 只适合作为服务监听地址，不建议直接在浏览器中访问。浏览器里请使用 `localhost`、`127.0.0.1`，或者你的本机局域网 IP。
-
-## 端口占用处理
-
-如果启动时报：
-
-```text
-Error: listen EADDRINUSE: address already in use 127.0.0.1:3001
-```
-
-说明 `3001` 端口已经有服务在运行。可以先查看占用进程：
-
-```bash
-lsof -nP -iTCP:3001 -sTCP:LISTEN
-```
-
-确认是旧的 mock 服务后停止它：
-
-```bash
-kill <PID>
-```
-
-或者直接换一个端口启动：
-
-```bash
-MOCK_PORT=3100 npm run dev
-```
+浏览器里请使用 `localhost`、`127.0.0.1`，或者你的本机局域网 IP 访问服务。
 
 ## 项目结构
 
@@ -86,14 +55,16 @@ local-mock-server/
 ├─ server.js
 ├─ src/
 │  ├─ app.js
+│  ├─ mocks/
+│  │  ├─ GET/
+│  │  ├─ POST/
+│  │  ├─ PUT/
+│  │  ├─ DELETE/
+│  │  └─ PATCH/
 │  ├─ router/
 │  │  ├─ index.js
+│  │  ├─ loadMockRoutes.js
 │  │  └─ registerRoutes.js
-│  ├─ modules/
-│  │  ├─ common.js
-│  │  ├─ user.js
-│  │  └─ order.js
-│  ├─ responses/
 │  ├─ utils/
 │  │  ├─ getParams.js
 │  │  ├─ response.js
@@ -103,35 +74,139 @@ local-mock-server/
 └─ README.md
 ```
 
-## 接口配置示例
+## 文件名规则
 
-`src/modules/user.js`
+每个 mock 文件必须放在 `src/mocks/<METHOD>/` 下，并以 `.mock.js` 结尾。
 
-```js
-const loginSuccessData = require('../responses/user/login.success.json');
-
-module.exports = [
-  {
-    method: 'post',
-    path: '/api/user/login',
-    required: {
-      body: ['username', 'password']
-    },
-    response: loginSuccessData
-  }
-];
+```text
+src/mocks/GET/api.common.ping.mock.js   -> GET /api/common/ping
+src/mocks/POST/api.user.login.mock.js   -> POST /api/user/login
+src/mocks/GET/api.user.[id].mock.js     -> GET /api/user/:id
+src/mocks/PUT/api/order/[id].mock.js    -> PUT /api/order/:id
 ```
 
-配置字段说明：
+路径参数推荐使用 `[id]` 这种写法，服务启动时会自动转换成 Express 的 `:id`。
 
-- `method`：请求方式，支持 `get` / `post` / `put` / `delete` / `patch`
-- `path`：接口路径，支持 Express 路径参数，例如 `/api/user/:id`
-- `required.body`：请求体必填字段
-- `required.query`：查询参数必填字段
-- `required.params`：路径参数必填字段
-- `response`：成功时返回的固定 demo 数据
+## 最简单写法
 
-## 缺参规则
+如果后端已经给了完整返回值，可以直接粘到 `.mock.js` 里：
+
+```js
+// src/mocks/GET/api.user.profile.mock.js
+module.exports = {
+  code: 0,
+  message: 'success',
+  data: {
+    id: 1001,
+    username: 'demo_user',
+    nickname: 'Mock User'
+  }
+};
+```
+
+请求：
+
+```bash
+curl http://localhost:3039/api/user/profile
+```
+
+## 多场景返回
+
+同一个接口需要验证多种情况时，使用 `default` 和 `scenarios`：
+
+```js
+// src/mocks/POST/api.user.login.mock.js
+module.exports = {
+  default: {
+    code: 0,
+    message: 'success',
+    data: {
+      token: 'mock-token'
+    }
+  },
+
+  scenarios: {
+    passwordError: {
+      code: 401,
+      message: '用户名或密码错误',
+      data: null
+    },
+    locked: {
+      code: 403,
+      message: '账号已冻结',
+      data: null
+    }
+  }
+};
+```
+
+默认返回：
+
+```bash
+curl -X POST http://localhost:3039/api/user/login
+```
+
+切换场景：
+
+```bash
+curl -X POST "http://localhost:3039/api/user/login?mockScenario=passwordError"
+curl -X POST "http://localhost:3039/api/user/login?scenario=locked"
+curl -X POST http://localhost:3039/api/user/login -H "X-Mock-Scenario: locked"
+```
+
+## 动态返回
+
+需要按请求参数返回不同数据时，可以使用 `resolve(req, context)`：
+
+```js
+module.exports = {
+  default: {
+    code: 0,
+    message: 'success',
+    data: {
+      list: [{ id: 1, name: 'Demo' }]
+    }
+  },
+
+  scenarios: {
+    empty: {
+      code: 0,
+      message: 'success',
+      data: {
+        list: []
+      }
+    }
+  },
+
+  resolve(req, { defaultResponse, scenarios }) {
+    if (req.query.keyword === 'empty') {
+      return scenarios.empty;
+    }
+
+    return defaultResponse;
+  }
+};
+```
+
+## 可选参数校验
+
+默认不校验参数。如果某个接口需要模拟缺参错误，可以在 `.mock.js` 里加 `required`：
+
+```js
+module.exports = {
+  required: {
+    body: ['username', 'password'],
+    query: ['tenantId'],
+    params: ['id']
+  },
+
+  default: {
+    code: 0,
+    message: 'success',
+    data: {}
+  }
+};
+```
 
 以下值会被视为缺失：
 
@@ -140,11 +215,9 @@ module.exports = [
 - 空字符串 `''`
 - 空数组 `[]`
 
-缺少多个字段时会一次性返回全部缺失字段。
-
 ## 统一返回格式
 
-成功：
+如果 mock 返回值已经是：
 
 ```json
 {
@@ -154,23 +227,25 @@ module.exports = [
 }
 ```
 
-缺少必填参数：
+服务会原样返回。
 
-```json
-{
-  "code": 400,
-  "message": "缺少必填参数: username, password",
-  "data": null
-}
+如果 mock 返回值不是统一格式，例如：
+
+```js
+module.exports = {
+  token: 'mock-token'
+};
 ```
 
-未匹配到接口：
+服务会自动包装成：
 
 ```json
 {
-  "code": 404,
-  "message": "mock接口不存在",
-  "data": null
+  "code": 0,
+  "message": "success",
+  "data": {
+    "token": "mock-token"
+  }
 }
 ```
 
@@ -179,11 +254,11 @@ module.exports = [
 ```text
 GET    /api/common/ping
 POST   /api/user/login
-GET    /api/user/profile?userId=1001
+GET    /api/user/profile
 GET    /api/user/:id
 PATCH  /api/user/:id
 DELETE /api/user/:id
-GET    /api/order/list?pageNum=1&pageSize=10
+GET    /api/order/list
 GET    /api/order/:id
 PUT    /api/order/:id
 ```
@@ -197,7 +272,7 @@ export default {
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3039',
         changeOrigin: true
       }
     }
@@ -205,38 +280,39 @@ export default {
 };
 ```
 
-这样前端仍然请求 `/api/user/login`，本地开发阶段会转发到 mock 服务，业务请求代码不用写死 mock 数据。
+这样前端仍然请求 `/api/user/login`，本地开发阶段会转发到 mock 服务。
 
 ## 新增一个接口
 
-1. 在 `src/responses/<module>/` 下新增一个 `.json` 响应文件。
-2. 在 `src/modules/<module>.js` 中引入这个响应文件。
-3. 在模块数组中新增一条接口配置。
-4. 如果新增了模块文件，在 `src/router/index.js` 中汇总导出。
+新增：
 
-示例：
+```text
+src/mocks/POST/api.order.create.mock.js
+```
+
+写入：
 
 ```js
-const createSuccessData = require('../responses/order/create.success.json');
-
-module.exports = [
-  {
-    method: 'post',
-    path: '/api/order/create',
-    required: {
-      body: ['productId', 'quantity']
-    },
-    response: createSuccessData
+module.exports = {
+  code: 0,
+  message: 'success',
+  data: {
+    id: 'ORDER-1003',
+    created: true
   }
-];
+};
+```
+
+重启服务后即可请求：
+
+```bash
+curl -X POST http://localhost:3039/api/order/create
 ```
 
 ## 调试示例
 
 ```bash
-curl http://localhost:3001/api/common/ping
-curl "http://localhost:3001/api/order/list?pageNum=1&pageSize=10"
-curl -X POST http://localhost:3001/api/user/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"demo_user","password":"123456"}'
+curl http://localhost:3039/api/common/ping
+curl "http://localhost:3039/api/order/list?mockScenario=empty"
+curl -X POST "http://localhost:3039/api/user/login?mockScenario=passwordError"
 ```

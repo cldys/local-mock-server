@@ -1,0 +1,8 @@
+module.exports = {
+  code: 0,
+  message: 'success',
+  data: {
+    service: 'local-mock-server',
+    status: 'ok'
+  }
+};

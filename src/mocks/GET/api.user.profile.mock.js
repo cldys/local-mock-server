@@ -1,0 +1,12 @@
+module.exports = {
+  code: 0,
+  message: 'success',
+  data: {
+    id: 1001,
+    username: 'demo_user',
+    nickname: 'Mock User',
+    email: 'demo.user@example.com',
+    phone: '13800000000',
+    department: 'Frontend'
+  }
+};

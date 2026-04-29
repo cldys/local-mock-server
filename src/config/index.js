@@ -1,5 +1,5 @@
-const DEFAULT_PORT = 3001;
-const DEFAULT_HOST = '127.0.0.1';
+const DEFAULT_PORT = 3039;
+const DEFAULT_HOST = "127.0.0.1";
 
 function toPort(value) {
   const port = Number(value);
@@ -9,5 +9,5 @@ function toPort(value) {
 module.exports = {
   host: process.env.MOCK_HOST || DEFAULT_HOST,
   port: toPort(process.env.MOCK_PORT || process.env.PORT),
-  logRequests: process.env.MOCK_LOG !== 'false'
+  logRequests: process.env.MOCK_LOG !== "false",
 };

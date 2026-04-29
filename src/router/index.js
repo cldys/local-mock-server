@@ -1,9 +1,3 @@
-const commonRoutes = require('../modules/common');
-const userRoutes = require('../modules/user');
-const orderRoutes = require('../modules/order');
+const loadMockRoutes = require('./loadMockRoutes');
 
-module.exports = [
-  ...commonRoutes,
-  ...userRoutes,
-  ...orderRoutes
-];
+module.exports = loadMockRoutes();
