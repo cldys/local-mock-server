@@ -36,6 +36,28 @@ local-mock-server/
 └─ README.md
 ```
 
+## 启动和延迟
+
+默认启动后请求不加延迟：
+
+```bash
+npm run dev
+```
+
+打开统一 1 秒延迟：
+
+```bash
+MOCK_DELAY=true npm run dev
+```
+
+如果需要临时改成其他延迟时间，可以设置毫秒数：
+
+```bash
+MOCK_DELAY=true MOCK_DELAY_MS=1500 npm run dev
+```
+
+`OPTIONS` 预检请求不会被延迟。
+
 ## 最简单场景
 
 如果后端已经给了完整返回值，可以直接粘到 `.mock.js` 里：

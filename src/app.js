@@ -1,7 +1,7 @@
 const express = require('express');
 const routes = require('./router');
 const registerRoutes = require('./router/registerRoutes');
-const { logRequests } = require('./config');
+const { delayEnabled, delayMs, logRequests } = require('./config');
 const { sendError, sendSuccess } = require('./utils/response');
 
 const app = express();
@@ -32,6 +32,12 @@ if (logRequests) {
     });
 
     next();
+  });
+}
+
+if (delayEnabled) {
+  app.use((req, res, next) => {
+    setTimeout(next, delayMs);
   });
 }
 
