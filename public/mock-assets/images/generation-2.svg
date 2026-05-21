@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2560" role="img" aria-labelledby="title desc">
+  <title id="title">Mock image generation result 2</title>
+  <desc id="desc">A second placeholder image for local mock responses.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#581c87"/>
+      <stop offset="0.5" stop-color="#be123c"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#e2e8f0" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="2560" fill="url(#bg)"/>
+  <circle cx="330" cy="520" r="180" fill="#f97316" opacity="0.9"/>
+  <circle cx="1130" cy="980" r="260" fill="#22d3ee" opacity="0.45"/>
+  <path d="M160 1320c220-260 460-260 720 0s420 260 560 0v1240H160z" fill="#111827" opacity="0.82"/>
+  <rect x="150" y="1840" width="1140" height="360" rx="0" fill="url(#panel)"/>
+  <text x="720" y="1995" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="700" fill="#111827">MOCK IMAGE 2</text>
+  <text x="720" y="2110" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="44" fill="#475569">/mock-assets/images/generation-2.svg</text>
+</svg>

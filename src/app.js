@@ -1,10 +1,12 @@
 const express = require('express');
+const path = require('path');
 const routes = require('./router');
 const registerRoutes = require('./router/registerRoutes');
 const { delayEnabled, delayMs, logRequests } = require('./config');
 const { sendError, sendSuccess } = require('./utils/response');
 
 const app = express();
+const mockAssetsDirectory = path.join(__dirname, '..', 'public', 'mock-assets');
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -34,6 +36,8 @@ if (logRequests) {
     next();
   });
 }
+
+app.use('/mock-assets', express.static(mockAssetsDirectory));
 
 if (delayEnabled) {
   app.use((req, res, next) => {

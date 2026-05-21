@@ -1,3 +1,5 @@
+const { getMockAssetUrl } = require("../../utils/assets");
+
 module.exports = {
   raw: true,
   required: {
@@ -30,6 +32,10 @@ module.exports = {
     return {
       ...defaultResponse,
       id: req.query.task_id || defaultResponse.id,
+      content: {
+        ...defaultResponse.content,
+        video_url: getMockAssetUrl(req, "videos/generation-demo.mp4"),
+      },
     };
   },
 };

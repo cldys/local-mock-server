@@ -1,3 +1,5 @@
+const { getMockAssetUrl } = require("../../utils/assets");
+
 module.exports = {
   raw: true,
   required: {
@@ -25,5 +27,15 @@ module.exports = {
       output_tokens: 28800,
       total_tokens: 28800,
     },
+  },
+
+  resolve(req, { defaultResponse }) {
+    return {
+      ...defaultResponse,
+      data: defaultResponse.data.map((item, index) => ({
+        ...item,
+        iobs_url: getMockAssetUrl(req, `images/generation-${index + 1}.svg`),
+      })),
+    };
   },
 };

@@ -7,6 +7,7 @@
 - 支持 `GET` / `POST` / `PUT` / `DELETE` / `PATCH`
 - 新增接口只需要新增一个 `.mock.js` 文件
 - `.mock.js` 可以写注释、默认返回、多场景返回和简单动态逻辑
+- 支持把图片、视频等 mock 资源放到项目内并通过 `/mock-assets` 访问
 - 默认不校验参数，需要时可在 mock 文件里声明 `required`
 - 成功返回自动使用统一格式，已包含 `code/message/data` 的响应会原样返回
 - 缺参、未知场景、未匹配接口使用统一错误格式
@@ -28,11 +29,16 @@ local-mock-server/
 │  │  ├─ loadMockRoutes.js
 │  │  └─ registerRoutes.js
 │  ├─ utils/
+│  │  ├─ assets.js
 │  │  ├─ getParams.js
 │  │  ├─ response.js
 │  │  └─ validate.js
 │  └─ config/
 │     └─ index.js
+├─ public/
+│  └─ mock-assets/
+│     ├─ images/
+│     └─ videos/
 └─ README.md
 ```
 
@@ -57,6 +63,31 @@ MOCK_DELAY=true MOCK_DELAY_MS=1500 npm run dev
 ```
 
 `OPTIONS` 预检请求不会被延迟。
+
+## 静态资源
+
+图片、视频等 mock 资源放在 `public/mock-assets/` 下，启动服务后通过 `/mock-assets` 访问。
+
+当前内置了两张图片占位资源和一个视频占位资源：
+
+```text
+public/mock-assets/
+├─ images/
+│  ├─ generation-1.svg
+│  └─ generation-2.svg
+└─ videos/
+   └─ generation-demo.mp4
+```
+
+访问地址会跟随当前请求 host 自动生成，例如：
+
+```text
+http://localhost:3039/mock-assets/images/generation-1.svg
+http://localhost:3039/mock-assets/images/generation-2.svg
+http://localhost:3039/mock-assets/videos/generation-demo.mp4
+```
+
+如果本地服务使用其他端口或局域网 IP，mock 返回里的资源地址也会自动同步变化。内置视频是 [MDN 的 CC0 示例素材](https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4)，仅用于本地 mock 占位。
 
 ## 最简单场景
 
@@ -213,3 +244,17 @@ module.exports = {
   }
 }
 ```
+
+如果接口需要直接返回原始业务数据，不使用统一响应包装，可以在 mock 配置中声明 `raw: true`：
+
+```js
+module.exports = {
+  raw: true,
+  default: {
+    total: 20,
+    data: []
+  }
+};
+```
+
+声明后服务会直接返回 `default`、`scenarios` 或 `resolve` 生成的响应内容，不再自动补充 `code`、`message`、`data`。
